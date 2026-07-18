@@ -1,0 +1,4 @@
+Prompt which I used for (Part A — Synthetic Test Data Generation):
+Exploring the project to understand the app and testing setup, then creating manual test cases and automated scripts.
+
+Creating manual_test_cases.md with three scenarios (including email normalization for duplicate detection) and adding matching Jest tests.

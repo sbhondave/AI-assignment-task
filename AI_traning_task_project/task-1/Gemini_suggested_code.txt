@@ -1,0 +1,124 @@
+import React, { useState, useRef, useEffect } from 'react';
+
+const MultiStepForm = () => {
+  const [step, setStep] = useState(1);
+  const [formData, setFormData] = useState({ name: '', email: '', plan: 'basic' });
+  const [errors, setErrors] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [statusMessage, setStatusMessage] = useState('');
+  
+  const alertRef = useRef(null);
+
+  // Real-time Validation Logic
+  const validate = (field, value) => {
+    let newErrors = { ...errors };
+    if (field === 'name') {
+      newErrors.name = value.length < 3 ? 'Name must be at least 3 characters' : '';
+    }
+    if (field === 'email') {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      newErrors.email = !emailRegex.test(value) ? 'Invalid email address' : '';
+    }
+    setErrors(newErrors);
+    return Object.values(newErrors).every(err => err === '');
+  };
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+    validate(name, value);
+  };
+
+  const nextStep = () => {
+    if (step === 1 && (!formData.name || errors.name)) return;
+    setStep(prev => prev + 1);
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (errors.email || !formData.email) return;
+
+    setIsSubmitting(true);
+    setStatusMessage('Submitting your information...');
+
+    // Simulate Async API call
+    await new Promise(resolve => setTimeout(resolve, 2000));
+
+    setIsSubmitting(false);
+    setStatusMessage('Form submitted successfully!');
+    setStep(3); // Move to Success Step
+  };
+
+  return (
+    <div className="form-container" style={{ maxWidth: '400px', margin: 'auto' }}>
+      {/* Accessibility: ARIA Live region for status updates */}
+      <div 
+        role="alert" 
+        aria-live="polite" 
+        ref={alertRef} 
+        style={{ marginBottom: '10px', color: '#007bff' }}
+      >
+        {statusMessage}
+      </div>
+
+      <form onSubmit={handleSubmit} noValidate>
+        {/* Step 1: Personal Info */}
+        {step === 1 && (
+          <section>
+            <h2>Step 1: Identity</h2>
+            <label htmlFor="name">Full Name</label>
+            <input
+              id="name"
+              name="name"
+              type="text"
+              value={formData.name}
+              onChange={handleChange}
+              aria-invalid={!!errors.name}
+              aria-describedby="name-error"
+              required
+            />
+            {errors.name && <p id="name-error" style={{ color: 'red' }}>{errors.name}</p>}
+            
+            <button type="button" onClick={nextStep} disabled={!!errors.name || !formData.name}>
+              Next
+            </button>
+          </section>
+        )}
+
+        {/* Step 2: Contact & Plan */}
+        {step === 2 && (
+          <section>
+            <h2>Step 2: Details</h2>
+            <label htmlFor="email">Email Address</label>
+            <input
+              id="email"
+              name="email"
+              type="email"
+              value={formData.email}
+              onChange={handleChange}
+              aria-invalid={!!errors.email}
+              aria-describedby="email-error"
+              required
+            />
+            {errors.email && <p id="email-error" style={{ color: 'red' }}>{errors.email}</p>}
+
+            <button type="button" onClick={() => setStep(1)}>Back</button>
+            <button type="submit" disabled={isSubmitting || !!errors.email || !formData.email}>
+              {isSubmitting ? 'Processing...' : 'Submit'}
+            </button>
+          </section>
+        )}
+
+        {/* Step 3: Success State */}
+        {step === 3 && (
+          <section>
+            <h2>Thank you, {formData.name}!</h2>
+            <p>Your subscription to the {formData.plan} plan is being processed.</p>
+          </section>
+        )}
+      </form>
+    </div>
+  );
+};
+
+export default MultiStepForm;

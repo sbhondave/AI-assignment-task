@@ -1,0 +1,16 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: simple-auth-service
+    ports:
+      - "3000:3000"
+    environment:
+      PORT: 3000
+      JWT_ACCESS_SECRET: 8nQk5zVm9Pq4Yt1Jr6Lb2Hx7Md0Fw3Sa
+      JWT_REFRESH_SECRET: 2cRf7Wp1Vz8Kd4Nm6Yx9Tq5Gh3Bj0LuA
+      JWT_ISSUER: simple-auth-service
+      JWT_AUDIENCE: simple-auth-clients
+      ACCESS_TOKEN_TTL_SECONDS: 900
+      REFRESH_TOKEN_TTL_SECONDS: 604800
