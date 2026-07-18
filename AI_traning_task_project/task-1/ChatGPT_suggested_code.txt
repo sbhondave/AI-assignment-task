@@ -1,0 +1,202 @@
+import React, { useState } from "react";
+
+const initialData = {
+  name: "",
+  email: "",
+  password: ""
+};
+
+export default function MultiStepForm() {
+  const [step, setStep] = useState(1);
+  const [formData, setFormData] = useState(initialData);
+  const [errors, setErrors] = useState({});
+  const [touched, setTouched] = useState({});
+  const [loading, setLoading] = useState(false);
+
+  // ---------------- Validation ----------------
+  const validate = (fieldValues = formData) => {
+    const newErrors = {};
+
+    if ("name" in fieldValues) {
+      if (!fieldValues.name.trim()) {
+        newErrors.name = "Name is required";
+      }
+    }
+
+    if ("email" in fieldValues) {
+      if (!fieldValues.email) {
+        newErrors.email = "Email is required";
+      } else if (!/\S+@\S+\.\S+/.test(fieldValues.email)) {
+        newErrors.email = "Invalid email format";
+      }
+    }
+
+    if ("password" in fieldValues) {
+      if (!fieldValues.password) {
+        newErrors.password = "Password is required";
+      } else if (fieldValues.password.length < 6) {
+        newErrors.password = "Minimum 6 characters required";
+      }
+    }
+
+    return newErrors;
+  };
+
+  // ---------------- Handlers ----------------
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+
+    const updatedData = { ...formData, [name]: value };
+    setFormData(updatedData);
+
+    // Real-time validation
+    const validationErrors = validate({ [name]: value });
+    setErrors((prev) => ({ ...prev, ...validationErrors }));
+  };
+
+  const handleBlur = (e) => {
+    const { name } = e.target;
+    setTouched((prev) => ({ ...prev, [name]: true }));
+
+    const validationErrors = validate({ [name]: formData[name] });
+    setErrors((prev) => ({ ...prev, ...validationErrors }));
+  };
+
+  const nextStep = () => {
+    const validationErrors = validate(formData);
+
+    if (step === 1 && validationErrors.name) {
+      setErrors(validationErrors);
+      setTouched({ name: true });
+      return;
+    }
+
+    if (step === 2 && validationErrors.email) {
+      setErrors(validationErrors);
+      setTouched({ email: true });
+      return;
+    }
+
+    setStep((prev) => prev + 1);
+  };
+
+  const prevStep = () => setStep((prev) => prev - 1);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    const validationErrors = validate(formData);
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+      setTouched({
+        name: true,
+        email: true,
+        password: true
+      });
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      // Simulate API call
+      await new Promise((res) => setTimeout(res, 2000));
+
+      alert("Form submitted successfully!");
+      setFormData(initialData);
+      setStep(1);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ---------------- UI ----------------
+  return (
+    <form onSubmit={handleSubmit} aria-live="polite">
+      <h2>Step {step} of 3</h2>
+
+      {step === 1 && (
+        <div>
+          <label htmlFor="name">Name</label>
+          <input
+            id="name"
+            name="name"
+            value={formData.name}
+            onChange={handleChange}
+            onBlur={handleBlur}
+            aria-invalid={!!errors.name}
+            aria-describedby="name-error"
+          />
+          {touched.name && errors.name && (
+            <span id="name-error" role="alert">
+              {errors.name}
+            </span>
+          )}
+        </div>
+      )}
+
+      {step === 2 && (
+        <div>
+          <label htmlFor="email">Email</label>
+          <input
+            id="email"
+            name="email"
+            value={formData.email}
+            onChange={handleChange}
+            onBlur={handleBlur}
+            aria-invalid={!!errors.email}
+            aria-describedby="email-error"
+          />
+          {touched.email && errors.email && (
+            <span id="email-error" role="alert">
+              {errors.email}
+            </span>
+          )}
+        </div>
+      )}
+
+      {step === 3 && (
+        <div>
+          <label htmlFor="password">Password</label>
+          <input
+            type="password"
+            id="password"
+            name="password"
+            value={formData.password}
+            onChange={handleChange}
+            onBlur={handleBlur}
+            aria-invalid={!!errors.password}
+            aria-describedby="password-error"
+          />
+          {touched.password && errors.password && (
+            <span id="password-error" role="alert">
+              {errors.password}
+            </span>
+          )}
+        </div>
+      )}
+
+      <div style={{ marginTop: "20px" }}>
+        {step > 1 && (
+          <button type="button" onClick={prevStep}>
+            Back
+          </button>
+        )}
+
+        {step < 3 && (
+          <button type="button" onClick={nextStep}>
+            Next
+          </button>
+        )}
+
+        {step === 3 && (
+          <button type="submit" disabled={loading}>
+            {loading ? "Submitting..." : "Submit"}
+          </button>
+        )}
+      </div>
+    </form>
+  );
+}
